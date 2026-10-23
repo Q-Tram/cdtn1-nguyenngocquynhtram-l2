@@ -1,10 +1,14 @@
 const express = require('express');
+const cors = require('cors'); // <-- Thêm dòng này
 require('dotenv').config();
 
 const db = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Thêm dòng kích hoạt CORS ở đây để Frontend (cổng 8080/5500) gọi sang không bị chặn
+app.use(cors()); 
 
 // 1. Phải đặt app.use(express.json()) ở trên cùng để phân tích cú pháp JSON trước
 app.use(express.json());

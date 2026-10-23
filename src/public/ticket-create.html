@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn hình 2: Tạo mới yêu cầu bảo hành - Smart CRM</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--text-main);
+            margin-top: 0;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            text-align: center;
+        }
+
+        /* Thanh điều hướng */
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 8px;
+            align-items: center;
+        }
+        .nav-bar span { font-weight: 600; font-size: 14px; color: #64748b; }
+        .nav-bar a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-bar a:hover {
+            background: #e0e7ff;
+            color: var(--primary-hover);
+        }
+
+        fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        legend {
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 0 8px;
+            font-size: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        label {
+            width: 160px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        input, select, textarea {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+        
+        .btn-secondary {
+            background-color: #64748b;
+        }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .msg {
+            margin-top: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .error { color: #dc2626; }
+        .success { color: #16a34a; }
+
+        .footer-uc {
+            margin-top: 24px;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>MÀN HÌNH 2 - TẠO MỚI YÊU CẦU BẢO HÀNH</h2>
+
+        <div class="nav-bar">
+            <span>QUẢN LÝ BẢO HÀNH:</span>
+            <a href="ticket-list.html">Danh sách</a>
+            <a href="ticket-create.html">Tạo yêu cầu</a>
+            <a href="#" onclick="logout()">Đăng xuất</a>
+        </div>
+
+        <!-- Form nhập liệu theo Wireframe BT1 -->
+        <div id="formState">
+            <!-- Thông tin khách hàng -->
+            <fieldset>
+                <legend>Thông tin khách hàng</legend>
+                <div class="form-group">
+                    <label>Số điện thoại:</label>
+                    <input type="text" id="phone" placeholder="Nhập số điện thoại (10 chữ số)">
+                    <button type="button" class="btn" style="margin-left: 10px;" onclick="lookupCustomer()">Tra cứu</button>
+                </div>
+                <div class="form-group">
+                    <label>Họ tên:</label>
+                    <input type="text" id="fullName" placeholder="Họ tên khách hàng">
+                </div>
+            </fieldset>
+
+            <!-- Thông tin thiết bị -->
+            <fieldset>
+                <legend>Thông tin thiết bị</legend>
+                <div class="form-group">
+                    <label>Tên thiết bị:</label>
+                    <input type="text" id="deviceName" placeholder="Tên thiết bị (VD: Điện thoại, Laptop)">
+                </div>
+                <div class="form-group">
+                    <label>Serial/IMEI:</label>
+                    <input type="text" id="serialNumber" placeholder="Số serial hoặc IMEI">
+                </div>
+                <div class="form-group">
+                    <label>Ngày mua:</label>
+                    <input type="date" id="purchaseDate">
+                </div>
+            </fieldset>
+
+            <!-- Thông tin sự cố -->
+            <fieldset>
+                <legend>Thông tin sự cố</legend>
+                <div class="form-group">
+                    <label>Mô tả lỗi:</label>
+                    <textarea id="issueDesc" placeholder="Nhập mô tả chi tiết lỗi..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Nhóm sự cố:</label>
+                    <select id="categoryId">
+                        <option value="1">Phần cứng</option>
+                        <option value="2">Phần mềm</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mức ưu tiên:</label>
+                    <select id="priority">
+                        <option value="TRUNG_BINH">Trung bình</option>
+                        <option value="CAO">Cao</option>
+                        <option value="THAP">Thấp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hạn cam kết:</label>
+                    <input type="text" id="dueDate" value="Tự động tính theo mức ưu tiên (QT-04)" disabled style="background: #e2e8f0; color: #64748b;">
+                </div>
+            </fieldset>
+
+            <div class="btn-group">
+                <button class="btn" onclick="saveTicket()">[Lưu yêu cầu]</button>
+                <button class="btn btn-secondary" onclick="window.location.href='ticket-list.html'">[Hủy]</button>
+            </div>
+            <p id="message" class="msg"></p>
+        </div>
+
+        <div class="footer-uc">Use Case: UC01 - UC06 (Tra cứu, ghi nhận thiết bị, phân loại và sinh hạn cam kết)</div>
+    </div>
+
+<script type="module">
+    import { createTicket } from '../api/ticket.api.js';
+
+    window.lookupCustomer = function() {
+        const phone = document.getElementById('phone').value.trim();
+        const msg = document.getElementById('message');
+        if (!phone) {
+            msg.className = 'msg error';
+            msg.innerText = 'Vui lòng nhập số điện thoại để tra cứu!';
+            return;
+        }
+        msg.className = 'msg success';
+        msg.innerText = `Đã tra cứu thành công thông tin cho số điện thoại: ${phone}`;
+    };
+
+    window.saveTicket = async function() {
+        const msg = document.getElementById('message');
+        msg.className = 'msg';
+        msg.innerText = 'Đang xử lý lưu yêu cầu bảo hành...';
+
+        const payload = {
+            phone: document.getElementById('phone').value.trim(),
+            full_name: document.getElementById('fullName').value.trim(),
+            device_name: document.getElementById('deviceName').value.trim(),
+            serial_number: document.getElementById('serialNumber').value.trim(),
+            purchase_date: document.getElementById('purchaseDate').value || null,
+            issue_desc: document.getElementById('issueDesc').value.trim(),
+            category_id: parseInt(document.getElementById('categoryId').value),
+            priority: document.getElementById('priority').value,
+            center_id: 1 // Mặc định trung tâm 1
+        };
+
+        // Kiểm tra validation cơ bản
+        if (!payload.phone || !payload.full_name || !payload.device_name || !payload.serial_number || !payload.issue_desc) {
+            msg.className = 'msg error';
+            msg.innerText = 'Vui lòng điền đầy đủ các thông tin bắt buộc!';
+            return;
+        }
+
+        try {
+            await createTicket(payload);
+            msg.className = 'msg success';
+            msg.innerText = 'Tạo mới yêu cầu bảo hành thành công! Đang chuyển hướng về danh sách...';
+            setTimeout(() => {
+                window.location.href = 'ticket-list.html';
+            }, 1500);
+        } catch (err) {
+            msg.className = 'msg error';
+            msg.innerText = `Lỗi: ${err.message}`;
+        }
+    };
+
+    window.logout = function() {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    };
+</script>
+</body>
+</html>s

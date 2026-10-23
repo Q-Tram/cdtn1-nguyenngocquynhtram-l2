@@ -39,7 +39,45 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. POST: Tạo mới yêu cầu bảo hành (Phục vụ UC01 -> UC06 - Màn hình 2)
+// 2. GET: Lấy chi tiết một phiếu bảo hành và lịch sử trạng thái (Phục vụ Màn hình 3)
+router.get('/:id', async (req, res) => {
+  try {
+    const ticketId = req.params.id;
+
+    // Lấy thông tin chi tiết phiếu kèm theo khách hàng, thiết bị và nhóm sự cố
+    const ticketQuery = `
+      SELECT t.*, c.full_name, c.phone, d.device_name, d.serial_number, d.purchase_date, ic.category_name 
+      FROM ticket t
+      JOIN customer c ON t.customer_id = c.customer_id
+      JOIN device d ON t.device_id = d.device_id
+      JOIN issue_category ic ON t.category_id = ic.category_id
+      WHERE t.ticket_id = $1
+    `;
+    const ticketResult = await db.query(ticketQuery, [ticketId]);
+
+    if (ticketResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành yêu cầu.' });
+    }
+
+    // Lấy lịch sử thay đổi trạng thái của phiếu
+    const logsQuery = `
+      SELECT * FROM ticket_status_log 
+      WHERE ticket_id = $1 
+      ORDER BY changed_at ASC
+    `;
+    const logsResult = await db.query(logsQuery, [ticketId]);
+
+    res.json({
+      success: true,
+      ticket: ticketResult.rows[0],
+      logs: logsResult.rows
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. POST: Tạo mới yêu cầu bảo hành (Phục vụ UC01 -> UC06 - Màn hình 2)
 router.post('/', async (req, res) => {
   try {
     const { phone, full_name, serial_number, device_name, purchase_date, category_id, center_id, issue_desc, priority } = req.body;
@@ -64,7 +102,7 @@ router.post('/', async (req, res) => {
       customerId = newCust.rows[0].customer_id;
     }
 
-    // Kiểm tra hoặc thêm thiết bị (QT03) - KHẮC PHỤC LỖI TẠI ĐÂY
+    // Kiểm tra hoặc thêm thiết bị (QT03)
     let deviceResult = await db.query('SELECT * FROM device WHERE serial_number = $1', [serial_number]);
     let resolvedDeviceId;
 
