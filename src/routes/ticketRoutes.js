@@ -1,146 +1,93 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const { calculateDueDate, normalizePhone } = require('../utils/businessRules');
+const ticketService = require('../services/ticketService');
 
-// 1. GET: Lấy danh sách phiếu bảo hành (Phục vụ UC07 - Màn hình 1)
+// GET /api/tickets - Lấy danh sách phiếu bảo hành
 router.get('/', async (req, res) => {
   try {
-    const { phone, status, priority } = req.query;
-    let queryText = `
-      SELECT t.*, c.full_name as customer_name, c.phone, d.device_name 
-      FROM ticket t
-      JOIN customer c ON t.customer_id = c.customer_id
-      JOIN device d ON t.device_id = d.device_id
-      WHERE 1=1
-    `;
-    let queryParams = [];
-    let paramIndex = 1;
-
-    if (phone) {
-      queryText += ` AND c.phone LIKE $${paramIndex++}`;
-      queryParams.push(`%${phone}%`);
-    }
-    if (status && status !== 'Tất cả') {
-      queryText += ` AND t.status = $${paramIndex++}`;
-      queryParams.push(status);
-    }
-    if (priority && priority !== 'Tất cả') {
-      queryText += ` AND t.priority = $${paramIndex++}`;
-      queryParams.push(priority);
-    }
-
-    queryText += ` ORDER BY t.ticket_id DESC`;
-
-    const result = await db.query(queryText, queryParams);
-    res.json({ success: true, data: result.rows });
+    const data = await ticketService.getAll(req.query);
+    res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Get tickets error:', err.message);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.statusCode ? err.message : 'Không thể lấy danh sách phiếu bảo hành.'
+    });
   }
 });
 
-// 2. GET: Lấy chi tiết một phiếu bảo hành và lịch sử trạng thái (Phục vụ Màn hình 3)
+// GET /api/tickets/:id - Lấy chi tiết và lịch sử trạng thái
 router.get('/:id', async (req, res) => {
   try {
-    const ticketId = req.params.id;
-
-    // Lấy thông tin chi tiết phiếu kèm theo khách hàng, thiết bị và nhóm sự cố
-    const ticketQuery = `
-      SELECT t.*, c.full_name, c.phone, d.device_name, d.serial_number, d.purchase_date, ic.category_name 
-      FROM ticket t
-      JOIN customer c ON t.customer_id = c.customer_id
-      JOIN device d ON t.device_id = d.device_id
-      JOIN issue_category ic ON t.category_id = ic.category_id
-      WHERE t.ticket_id = $1
-    `;
-    const ticketResult = await db.query(ticketQuery, [ticketId]);
-
-    if (ticketResult.rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành yêu cầu.' });
-    }
-
-    // Lấy lịch sử thay đổi trạng thái của phiếu
-    const logsQuery = `
-      SELECT * FROM ticket_status_log 
-      WHERE ticket_id = $1 
-      ORDER BY changed_at ASC
-    `;
-    const logsResult = await db.query(logsQuery, [ticketId]);
+    const result = await ticketService.getById(req.params.id);
 
     res.json({
       success: true,
-      ticket: ticketResult.rows[0],
-      logs: logsResult.rows
+      ticket: result.ticket,
+      logs: result.logs
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Get ticket detail error:', err.message);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.statusCode ? err.message : 'Không thể lấy chi tiết phiếu bảo hành.'
+    });
   }
 });
 
-// 3. POST: Tạo mới yêu cầu bảo hành (Phục vụ UC01 -> UC06 - Màn hình 2)
+// POST /api/tickets - Tạo phiếu bảo hành
 router.post('/', async (req, res) => {
   try {
-    const { phone, full_name, serial_number, device_name, purchase_date, category_id, center_id, issue_desc, priority } = req.body;
-    
-    // Chuẩn hóa số điện thoại theo QT02
-    const normalizedPhone = normalizePhone(phone);
-    if (!/^0[0-9]{9}$/.test(normalizedPhone)) {
-      return res.status(400).json({ success: false, error: 'Số điện thoại không hợp lệ (phải có 10 chữ số và bắt đầu bằng số 0 theo QT02).' });
-    }
+    const data = await ticketService.create(req.body);
 
-    // Kiểm tra khách hàng tồn tại hay chưa theo QT01
-    let customerResult = await db.query('SELECT * FROM customer WHERE phone = $1', [normalizedPhone]);
-    let customerId;
-
-    if (customerResult.rows.length > 0) {
-      customerId = customerResult.rows[0].customer_id;
-    } else {
-      const newCust = await db.query(
-        'INSERT INTO customer (full_name, phone) VALUES ($1, $2) RETURNING customer_id',
-        [full_name || 'Khách lẻ', normalizedPhone]
-      );
-      customerId = newCust.rows[0].customer_id;
-    }
-
-    // Kiểm tra hoặc thêm thiết bị (QT03)
-    let deviceResult = await db.query('SELECT * FROM device WHERE serial_number = $1', [serial_number]);
-    let resolvedDeviceId;
-
-    if (deviceResult.rows.length > 0) {
-      resolvedDeviceId = deviceResult.rows[0].device_id;
-    } else {
-      const newDev = await db.query(
-        'INSERT INTO device (customer_id, serial_number, device_name, purchase_date) VALUES ($1, $2, $3, $4) RETURNING device_id',
-        [customerId, serial_number, device_name || 'Thiết bị bảo hành', purchase_date || null]
-      );
-      resolvedDeviceId = newDev.rows[0].device_id;
-    }
-
-    // Xác định trạng thái và kiểm tra bảo hành (QT05)
-    const isVerified = purchase_date ? true : false;
-    const initialStatus = 'Mới tiếp nhận';
-
-    // Tự động tính hạn cam kết theo QT04
-    const dueDate = calculateDueDate(priority || 'TRUNG_BINH');
-
-    // Tạo phiếu bảo hành (Ticket)
-    const ticketResult = await db.query(
-      `INSERT INTO ticket (customer_id, device_id, category_id, center_id, issue_desc, priority, status, is_verified, due_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [customerId, resolvedDeviceId, category_id, center_id || 1, issue_desc, priority || 'TRUNG_BINH', initialStatus, isVerified, dueDate]
-    );
-
-    const newTicket = ticketResult.rows[0];
-
-    // Ghi lịch sử trạng thái theo QT06
-    await db.query(
-      `INSERT INTO ticket_status_log (ticket_id, from_status, to_status, note) VALUES ($1, $2, $3, $4)`,
-      [newTicket.ticket_id, null, initialStatus, 'Tiếp nhận yêu cầu bảo hành ban đầu']
-    );
-
-    res.status(201).json({ success: true, message: 'Tạo phiếu bảo hành thành công!', data: newTicket });
+    res.status(201).json({
+      success: true,
+      message: 'Tạo phiếu bảo hành thành công!',
+      data
+    });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Create ticket error:', err.message);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.statusCode ? err.message : 'Không thể tạo phiếu bảo hành.'
+    });
+  }
+});
+
+// PUT /api/tickets/:id - Cập nhật phiếu bảo hành
+router.put('/:id', async (req, res) => {
+  try {
+    const data = await ticketService.update(req.params.id, req.body);
+
+    res.json({
+      success: true,
+      message: 'Cập nhật phiếu bảo hành thành công!',
+      data
+    });
+  } catch (err) {
+    console.error('Update ticket error:', err.message);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.statusCode ? err.message : 'Không thể cập nhật phiếu bảo hành.'
+    });
+  }
+});
+
+// DELETE /api/tickets/:id - Xóa phiếu bảo hành
+router.delete('/:id', async (req, res) => {
+  try {
+    await ticketService.delete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Xóa phiếu bảo hành thành công!'
+    });
+  } catch (err) {
+    console.error('Delete ticket error:', err.message);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.statusCode ? err.message : 'Không thể xóa phiếu bảo hành.'
+    });
   }
 });
 
