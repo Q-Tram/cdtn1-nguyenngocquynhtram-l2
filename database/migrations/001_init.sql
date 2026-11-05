@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS customer (
 );
 
 -- 2. Thiet bi
-CREATE TABLE IF NOT EXISTS device (
+CREATE TABLE IF NOrouter.getT EXISTS device (
     device_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     serial_number VARCHAR(100) NOT NULL UNIQUE,
