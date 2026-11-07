@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node --test tests/unit/businessRules.js"
+    "test": "node --test tests/unit/businessRules.js tests/unit/ticketService.js"
   },
   "repository": {
     "type": "git",

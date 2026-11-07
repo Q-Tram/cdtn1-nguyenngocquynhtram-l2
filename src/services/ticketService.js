@@ -1,3 +1,4 @@
+
 const ticketRepository = require('../repositories/ticketRepository');
 const { calculateDueDate, normalizePhone } = require('../utils/businessRules');
 
@@ -48,6 +49,16 @@ const ticketService = {
     if (!input.category_id || !Number.isInteger(Number(input.category_id)) ||
         Number(input.category_id) <= 0) {
       const error = new Error('Nhóm sự cố không hợp lệ.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const category = await ticketRepository.findCategoryById(
+      Number(input.category_id)
+    );
+
+    if (!category) {
+      const error = new Error('Nhóm sự cố không tồn tại.');
       error.statusCode = 400;
       throw error;
     }

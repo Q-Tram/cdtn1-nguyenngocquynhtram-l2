@@ -1,3 +1,4 @@
+
 const db = require('../config/database');
 
 const ticketRepository = {
@@ -42,6 +43,17 @@ const ticketRepository = {
        JOIN issue_category ic ON t.category_id = ic.category_id
        WHERE t.ticket_id = $1`,
       [ticketId]
+    );
+
+    return result.rows[0] || null;
+  },
+
+  async findCategoryById(categoryId) {
+    const result = await db.query(
+      `SELECT category_id, category_name
+       FROM issue_category
+       WHERE category_id = $1`,
+      [categoryId]
     );
 
     return result.rows[0] || null;
