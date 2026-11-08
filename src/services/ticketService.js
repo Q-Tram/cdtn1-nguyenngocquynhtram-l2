@@ -117,10 +117,28 @@ const ticketService = {
       throw error;
     }
 
+    const categoryId = Number(
+      input.category_id || existingTicket.category_id
+    );
+
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      const error = new Error('Nhóm sự cố không hợp lệ.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const category = await ticketRepository.findCategoryById(categoryId);
+
+    if (!category) {
+      const error = new Error('Nhóm sự cố không tồn tại.');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const dueDate = calculateDueDate(input.priority);
 
     const updatedTicket = await ticketRepository.update(ticketId, {
-      category_id: Number(input.category_id || existingTicket.category_id),
+      category_id: categoryId,
       center_id: Number(input.center_id || existingTicket.center_id),
       issue_desc: String(input.issue_desc).trim(),
       priority: input.priority,
