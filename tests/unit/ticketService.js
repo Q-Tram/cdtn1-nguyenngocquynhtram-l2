@@ -2,6 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+const db = require('../../src/config/database');
 const ticketRepository = require('../../src/repositories/ticketRepository');
 const ticketService = require('../../src/services/ticketService');
 
@@ -77,5 +78,28 @@ test('BUG-02: Từ chối cập nhật phiếu khi nhóm sự cố không tồn 
     ticketRepository.findById = originalFindById;
     ticketRepository.findCategoryById = originalFindCategoryById;
     ticketRepository.update = originalUpdate;
+  }
+});
+
+test('BUG-03: Chuyển mã trạng thái khi lọc phiếu', async () => {
+  const originalQuery = db.query;
+  let capturedQuery;
+  let capturedParams;
+
+  db.query = async (query, params) => {
+    capturedQuery = query;
+    capturedParams = params;
+    return { rows: [] };
+  };
+
+  try {
+    await ticketRepository.findAll({
+      status: 'MOI_TIEP_NHAN'
+    });
+
+    assert.deepEqual(capturedParams, ['Mới tiếp nhận']);
+    assert.match(capturedQuery, /AND t\.status = \$1/);
+  } finally {
+    db.query = originalQuery;
   }
 });

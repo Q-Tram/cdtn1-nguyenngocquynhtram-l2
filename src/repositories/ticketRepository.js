@@ -18,7 +18,12 @@ const ticketRepository = {
     }
 
     if (status && status !== 'Tất cả') {
-      params.push(status);
+      const statusMap = {
+        MOI_TIEP_NHAN: 'Mới tiếp nhận',
+        DANG_XU_LY: 'Đang xử lý'
+      };
+
+      params.push(statusMap[status] || status);
       query += ` AND t.status = $${params.length}`;
     }
 
