@@ -54,3 +54,33 @@ Ghi nhận các điểm cần điều chỉnh sau khi nhận phản hồi BT1, �
 ## 3. Nguyên tắc thực hiện
 
 Các thay đổi được thực hiện dựa trên phản hồi BT1 và phạm vi luồng L2. Những nội dung chưa được xác định đầy đủ sẽ được làm rõ trước khi chốt mô hình dữ liệu và triển khai mã nguồn. Không mở rộng sang các nghiệp vụ ngoài phạm vi đã thống nhất.
+## 4. Tiếp nhận và xử lý phản hồi Bài tập 2
+
+### TD-07 – Bổ sung tag phiên bản v0.2 cho repository
+
+- **Phản hồi:** Repository chưa có tag `v0.2` theo yêu cầu của bài tập.
+- **Quyết định:** ĐÃ XỬ LÝ.
+- **Nội dung:** Tạo annotated tag `v0.2` cho phiên bản hoàn thiện Bài tập 2 và đẩy tag lên GitHub.
+- **Kết quả:** Tag `v0.2` đã được tạo và push thành công.
+- **Minh chứng:** https://github.com/Q-Tram/cdtn1-nguyenngocquynhtram-l2/releases/tag/v0.2
+
+### TD-08 – Bổ sung minh chứng ba trạng thái giao diện
+
+- **Phản hồi:** Báo cáo Bài tập 2 chưa có đầy đủ hình ảnh minh chứng cho ba trạng thái Loading, Empty và Error.
+- **Quyết định:** ĐÃ XỬ LÝ.
+- **Nội dung:** Kiểm tra giao diện trong các tình huống tải dữ liệu, không tìm thấy kết quả và không thể kết nối đến máy chủ API; bổ sung hình ảnh minh chứng tương ứng vào báo cáo.
+- **Kết quả:** Báo cáo đã có hình minh chứng cho ba trạng thái Loading, Empty và Error.
+
+### TD-09 – Bổ sung dữ liệu mẫu cho hệ thống
+
+- **Phản hồi:** Repository chưa có tệp seed để tạo dữ liệu mẫu phục vụ quá trình kiểm thử và chạy lại hệ thống.
+- **Quyết định:** ĐÃ XỬ LÝ.
+- **Nội dung:** Bổ sung tệp `database/seeds/001_seed.sql` để tạo dữ liệu mẫu cho khách hàng, thiết bị, nhóm sự cố, yêu cầu bảo hành và lịch sử trạng thái.
+- **Kết quả:** Đã chạy tệp seed thành công và kiểm tra chạy lại để hạn chế phát sinh dữ liệu trùng lặp. Tệp đã được commit và push lên repository.
+
+### TD-10 – Bổ sung thông tin kiểm chứng trong bảng khai báo sử dụng AI
+
+- **Phản hồi:** Bảng khai báo sử dụng công cụ AI chưa có cột thể hiện cách sinh viên kiểm chứng nội dung do AI hỗ trợ.
+- **Quyết định:** ĐÃ XỬ LÝ.
+- **Nội dung:** Bổ sung cột “Em đã kiểm chứng thế nào” và ghi rõ cách đối chiếu nội dung với đề bài, tài liệu được cung cấp, chức năng thực tế và kết quả kiểm thử.
+- **Kết quả:** Bảng khai báo sử dụng AI đã có thông tin về cách kiểm chứng kết quả.
