@@ -74,6 +74,8 @@ Sau khi server khởi động:
 - Kiểm tra các API đã triển khai.
 - Mở giao diện theo địa chỉ và cổng được cấu hình trong ứng dụng.
 - Thử các chức năng tiếp nhận, xem danh sách và xem chi tiết yêu cầu bảo hành.
+### Bước 7. Chạy hệ thống
+http://localhost:3000/ticket-list.html
 
 ## 4. Cấu trúc thư mục
 
